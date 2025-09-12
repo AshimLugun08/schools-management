@@ -9,9 +9,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 interface SchoolGridProps {
   refreshTrigger?: number;
   onStatsUpdate?: (stats: { totalSchools: number; activeSchools: number; citiesCovered: number }) => void;
+  searchQuery?: string; // Added searchQuery
 }
 
-export function SchoolGrid({ refreshTrigger, onStatsUpdate }: SchoolGridProps) {
+export function SchoolGrid({ refreshTrigger, onStatsUpdate, searchQuery }: SchoolGridProps) {
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +29,6 @@ export function SchoolGrid({ refreshTrigger, onStatsUpdate }: SchoolGridProps) {
 
       setSchools(data.data || []);
 
-      // Update stats in parent
       if (onStatsUpdate && data.stats) {
         onStatsUpdate(data.stats);
       }
@@ -43,6 +43,10 @@ export function SchoolGrid({ refreshTrigger, onStatsUpdate }: SchoolGridProps) {
   useEffect(() => {
     fetchSchools();
   }, [refreshTrigger]);
+
+  const filteredSchools = searchQuery
+    ? schools.filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : schools;
 
   if (loading) {
     return (
@@ -62,21 +66,21 @@ export function SchoolGrid({ refreshTrigger, onStatsUpdate }: SchoolGridProps) {
     );
   }
 
-  if (schools.length === 0) {
+  if (filteredSchools.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
           <AlertCircle className="h-12 w-12 text-gray-400" />
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">No schools found</h3>
-        <p className="text-gray-600">Get started by adding your first school.</p>
+        <p className="text-gray-600">Try adding a school or adjusting your search.</p>
       </div>
     );
   }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {schools.map((school) => (
+      {filteredSchools.map((school) => (
         <SchoolCard key={school.id} school={school} />
       ))}
     </div>
